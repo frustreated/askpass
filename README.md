@@ -91,3 +91,27 @@ typing backspace multiple times such that you erase more characters than are on
 the current line, the echoing does not reflect that characters on the previous
 line have been erased from input.  They are in fact erased from input and are
 not written to standard output, but the echoing just doesn't reflect this.
+
+# Build Requirements
+
+* [CMake](http://www.cmake.org) >= v2.6 (tested with v3.7.2)
+* C++ compiler supporting C++-11 (tested with gcc v6.4.0)
+* [GNU Make](https://www.gnu.org/software/make/make.html) (tested with v4.2.1)
+* [ncurses](https://www.gnu.org/software/ncurses/) (tested with v6.0-r1)
+* [boost](http://www.boost.org/) (tested with 1.63.0)
+
+# Runtime Requirements
+
+* C++ runtime libraries
+* ncurses libraries
+* boost\_program\_options library
+
+# Build Instructions
+
+1. mkdir -p build/default
+1. cd build/default
+1. cmake ../..
+1. make
+
+Output is single executable __askpass__.  Install in whatever directory you want.
+

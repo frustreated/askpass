@@ -28,7 +28,10 @@
 #include <cstring>
 #include <atomic>
 #include <signal.h>
+#include <unistd.h>
 #include <boost/program_options.hpp>
+
+static const char EchoOnInput = '*';
 
 class ncterm
 {
@@ -91,6 +94,8 @@ bool init_signals()
     return rval;
 }
 
+int processInput(bool multiLine, bool echo);
+
 int main(int argc, const char* argv[])
 {
     setlocale(LC_ALL,"");
@@ -101,9 +106,6 @@ int main(int argc, const char* argv[])
     const std::string OptMultiLine("multi-line");
     const std::string OptEcho("echo");
     
-    const char CharEot = 4;
-    const char CharDel = 127;
-    const char EchoOnInput = '*';
 
     std::string echoHelp("echo '");
     echoHelp += EchoOnInput;
@@ -139,62 +141,83 @@ int main(int argc, const char* argv[])
     bool multiLine = vm.count(OptMultiLine) != 0;
     bool echo = vm.count(OptEcho) != 0;
 
-    std::size_t endpos = 0;
-    std::stringstream ss;
+    if(!isatty(fileno(stdin)))
+    {
+        std::cerr<<"Standard input is not a terminal.\n";
+        return 101;
+    }
     init_signals();
 
-    { // new scope for ncurses mode
-        ncterm nct(stdin,stderr);
-        if(ERR == cbreak())
-            throw std::runtime_error("Failed to disable line buffering and erase/kill processing on standard input.\n");
-        if(ERR == noecho())
-            throw std::runtime_error("Failed to disable input echoing in ncurses library.\n");
-        if(ERR == nl())
-            throw std::runtime_error("Failed to enable newline translation in ncurses library.\n");
+    try
+    {
+        return processInput(multiLine, echo);
+    }
+    catch(const std::exception& ex)
+    {
+        std::cerr<<"Exception processing input: "<<ex.what()<<'\n';
+        return 102;
+    }
+}
 
-        for(;;)
-        {
-            int c = getch();
-            int s = sig.load();
-            if(s != 0)
-                return s;
+int processInput(bool multiLine, bool echo)
+{
+    const char CharEot = 4;
+    const char CharDel = 127;
+
+    std::size_t endpos = 0;
+    std::stringstream ss;
+
+    ncterm nct(stdin, stderr);
+    if(ERR == cbreak())
+        throw std::runtime_error("Failed to disable line buffering and erase/kill processing on standard input.");
+    if(ERR == noecho())
+        throw std::runtime_error("Failed to disable input echoing in ncurses library.");
+    if(ERR == nonl())
+        throw std::runtime_error("Failed to disable newline translation in ncurses library.");
+
+    for(;;)
+    {
+        int c = getch();
+        int s = sig.load();
+        if(s != 0)
+            return s;
 #ifdef DEBUG
-            std::cerr<<' '<<c<<' '<<std::flush;
+        std::cerr<<' '<<c<<' '<<std::flush;
 #endif
-            if(c == CharEot || c == EOF) // CharEot for terminal, EOF for file or pipe
-                break;
-            if(!multiLine && c == '\n')
-                break;
-            else if(c == '\b' || c == CharDel)
+        if(c == CharEot)
+            break;
+        if(!multiLine && (c == '\n' || c == '\r'))
+            break;
+        else if(c == '\b' || c == CharDel)
+        {
+            if(endpos != 0)
             {
-                if(endpos != 0)
-                {
-                    ss.seekp(-1, std::ios_base::cur);
-                    --endpos;
-                    if(echo)
-                    {
-                        echochar('\b');
-                        echochar(' ');
-                        echochar('\b');
-                    }
-                }
-            }
-            else
-            {
-                ss.put(c);
-                ++endpos;
+                ss.seekp(-1, std::ios_base::cur);
+                --endpos;
                 if(echo)
                 {
-                    char ec;
-                    if(c == '\n')
-                        ec = c;
-                    else
-                        ec = EchoOnInput;
-                    echochar(ec);
+                    echochar('\b');
+                    echochar(' ');
+                    echochar('\b');
                 }
             }
         }
+        else
+        {
+            ss.put(c);
+            ++endpos;
+            if(echo)
+            {
+                char ec;
+                if(c == '\n' || c == '\r')
+                    ec = '\n';
+                else
+                    ec = EchoOnInput;
+                    echochar(ec);
+            }
+        }
     }
+
     std::string str(ss.str());
     str.erase(endpos);
     std::cout<<str;

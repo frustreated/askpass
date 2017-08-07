@@ -132,7 +132,7 @@ int main(int argc, const char* argv[])
     
     if(vm.count(OptHelp))
     {
-        std::cout<<desc;
+        std::cout<<argv[0]<<" [--help] [--echo] [--multi-line]\n"<<desc;
         return 0;
     }
     

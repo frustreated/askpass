@@ -2,8 +2,8 @@
 
 This program is a simple utility to get a password from a terminal with echo
 disabled.  It writes the password to standard output so that it can be used to
-securely provide a password for programs that accept reading a password from a
-program.
+securely provide a password for programs that accept reading a password from
+the output of a program.
 
 One feature that sets this apart from other utilities is that it optionally
 supports accepting multiple lines of input, which is explained in detail below.
@@ -14,10 +14,14 @@ terminal, it terminates with an error.
 # Invocation
 
 askpass \[--help\] \[--echo\] \[--multi-line\]
+
 Option Summary:
+
   --help                generate help message
+
   --multi-line          only terminate reading from input upon reading EOF, 
                         otherwise  also terminates input
+
   --echo                echo __*__ to terminal for each accepted input character.
                           Note that when multi-line is enabled, a new-line is 
                         echoed for input of new-line or carriage-return instead
@@ -27,11 +31,14 @@ Option Summary:
 
 Askpass reads from the terminal connected to standard input.  When multi-line
 is disabled (the default), askpass terminates input processing when either a
-carriage-return(Return/Enter key) or newline (^J) is entered, or when a ^D is
-entered.  When multi-line is enabled, only an ^D terminates input processing.
+_carriage-return_ (_\r_) or a _newline_ (_\n_) is entered, or when an _EOT_ is
+entered.  When multi-line is enabled, only a _EOT_ terminates input processing.
 
-To erase a previously typed character, use either the Backspace or Delete key.
-Depending on terminal settings, ^H may also work.
+To generate a _\r_, use the __Enter__ or __Return__ key.  To generate a
+_\n_, type __^J__.  For _EOT_, type __^D__.
+
+To erase a previously typed character, use either the __Backspace__ or
+__Delete__ key.  Depending on terminal settings, __^H__ may also work.
 
 Note that some keys generate a sequence of characters, depending on terminal
 settings.  So if you are using a such keys for a password on one terminal,
@@ -47,18 +54,18 @@ multi-line mode and enter the password as the first line, and RPC commands
 (that also have passwords as parameters) on subsequent lines.  This allows all
 sensitive input to be entered without echoing it to the terminal.
 
-In mult-line mode, pressing the Enter/Return key generates a carriage-return,
-which askpass writes to standard output with no translation.  If you desire
-a newline instead, use ^J to generate it.
+In mult-line mode, pressing the Enter/Return key generates a _\r_, which askpass
+writes to standard output with no translation.  If you desire a _\n_ instead,
+use __^J__ to generate it.
 
 # Echo Mode
 
 In echo mode, askpass echos a __*__ for any input character it accepts from
 standard input, except for newline or carriage-return characters which echo a
-new-line and carriage-return on the terminal.  Typing Backspace, Delete  or ^H
-(depending on terminal settings) in echomode erases the previously echoed __*__
-character on the terminal, as well as undoing the previously typed character so
-that it is not written to stanard output.
+new-line and carriage-return on the terminal.  Typing __Backspace__,
+__Delete__, or __^H__ (depending on terminal settings) in echo mode erases the
+previously echoed __*__ character on the terminal, as well as undoing the
+previously typed character so that it is not written to stanard output.
 
 # Signals
 
@@ -79,7 +86,7 @@ This program restores terminal settings upon receiving the following signals:
 
 # Limitations
 
-In multi-line mode with echo enabled, if you have already entered a return,
+In multi-line mode with echo enabled, if you have already entered a _\r_ or _\n_,
 typing backspace multiple times such that you erase more characters than are on
 the current line, the echoing does not reflect that characters on the previous
 line have been erased from input.  They are in fact erased from input and are

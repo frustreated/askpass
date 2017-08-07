@@ -61,11 +61,11 @@ use __^J__ to generate it.
 # Echo Mode
 
 In echo mode, askpass echos a __*__ for any input character it accepts from
-standard input, except for newline or carriage-return characters which echo a
-new-line and carriage-return on the terminal.  Typing __Backspace__,
-__Delete__, or __^H__ (depending on terminal settings) in echo mode erases the
-previously echoed __*__ character on the terminal, as well as undoing the
-previously typed character so that it is not written to stanard output.
+standard input, except for _\r_ and _\n_ characters which each echo both a
+_\n_ and _\r_ to the terminal.  Typing __Backspace__, __Delete__, or __^H__
+(depending on terminal settings) in echo mode erases the previously echoed
+__*__ character on the terminal, as well as undoing the previously typed
+character so that it is not written to stanard output.
 
 # Signals
 

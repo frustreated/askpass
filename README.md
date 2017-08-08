@@ -58,9 +58,9 @@ multi-line mode and enter the password as the first line, and RPC commands
 (that also have passwords as parameters) on subsequent lines.  This allows all
 sensitive input to be entered without echoing it to the terminal.
 
-In mult-line mode, pressing the Enter/Return key generates a _\r_, which askpass
-by default translates to a _\n_ on output.  You can optionally disable this
-translation using the --no-eol-tx option.
+In mult-line mode, pressing the __Enter__/__Return__ key generates a _\r_,
+which askpass by default translates to a _\n_ on output.  You can optionally
+disable this translation using the _--no-eol-tx_ option.
 
 # Echo Mode
 
@@ -117,5 +117,7 @@ not written to standard output, but the echoing just doesn't reflect this.
 1. cmake ../..
 1. make
 
-Output is single executable __askpass__.  Install in whatever directory you want.
+Output is single executable _askpass_.  Install in whatever directory you want,
+or use _make install_ to install in CMake's default _bin_ directory
+_/usr/local/bin_.
 

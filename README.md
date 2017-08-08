@@ -13,29 +13,33 @@ terminal, it terminates with an error.
 
 # Invocation
 
-askpass \[--help\] \[--echo\] \[--multi-line\]
-
+```
+askpass [--help] [--echo] [--multi-line] [--no-eol-tx]
 Option Summary:
-
   --help                generate help message
+  --echo                Echo '*' to terminal for each accepted input character.
+                          Note that when echo and multi-line are both enabled, 
+                        either a new-line ('\n') or carriage-return ('\r') on 
+                        input results in both '\n' and '\r' echoed to the 
+                        terminal insted of a '*'.
+  --multi-line          only terminate reading from input upon reading 
+                        end-of-transmission (EOT), otherwise either ('\n') or 
+                        ('\r') also terminates input
+  --no-eol-tx           By default, askpass translates '\r' to '\n' on output. 
+                        This option disables that translation.  Note: this 
+                        option has no effect unless multi-line mode is enabled.
 
-  --multi-line          only terminate reading from input upon reading EOF, 
-                        otherwise  also terminates input
-
-  --echo                echo __*__ to terminal for each accepted input character.
-                          Note that when multi-line is enabled, a new-line is 
-                        echoed for input of new-line or carriage-return instead
-                        of __*__.
+The 'Enter' or 'Return' key normally generates a '\r'.  You can also generate a '\r' using ^M.
+You can generate a '\n' using ^J
+You can generate an EOT using ^D.
+```
 
 # Input Processing
 
 Askpass reads from the terminal connected to standard input.  When multi-line
 is disabled (the default), askpass terminates input processing when either a
-_carriage-return_ (_\r_) or a _newline_ (_\n_) is entered, or when an _EOT_ is
+_newline_ (_\n_) or a _carriage-return_ (_\r_) is entered, or when an _EOT_ is
 entered.  When multi-line is enabled, only a _EOT_ terminates input processing.
-
-To generate a _\r_, use the __Enter__ or __Return__ key.  To generate a
-_\n_, type __^J__.  For _EOT_, type __^D__.
 
 To erase a previously typed character, use either the __Backspace__ or
 __Delete__ key.  Depending on terminal settings, __^H__ may also work.
@@ -55,8 +59,8 @@ multi-line mode and enter the password as the first line, and RPC commands
 sensitive input to be entered without echoing it to the terminal.
 
 In mult-line mode, pressing the Enter/Return key generates a _\r_, which askpass
-writes to standard output with no translation.  If you desire a _\n_ instead,
-use __^J__ to generate it.
+by default translates to a _\n_ on output.  You can optionally disable this
+translation using the --no-eol-tx option.
 
 # Echo Mode
 

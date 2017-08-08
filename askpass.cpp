@@ -94,7 +94,7 @@ bool init_signals()
     return rval;
 }
 
-int processInput(bool multiLine, bool echo);
+int processInput(bool multiLine, bool echo, bool eolTx);
 
 int main(int argc, const char* argv[])
 {
@@ -103,24 +103,31 @@ int main(int argc, const char* argv[])
     namespace po = boost::program_options;
 
     const std::string OptHelp("help");
-    const std::string OptMultiLine("multi-line");
     const std::string OptEcho("echo");
-    
+    const std::string OptMultiLine("multi-line");
+    const std::string OptNoEolTx("no-eol-tx");
 
-    std::string echoHelp("echo '");
+    std::string echoHelp("Echo '");
     echoHelp += EchoOnInput;
     echoHelp += "' to terminal for each accepted input character.  Note that when ";
+    echoHelp += OptEcho;
+    echoHelp += " and ";
     echoHelp += OptMultiLine;
-    echoHelp += " is enabled, a new-line is echoed for input of new-line or carriage-return instead of '";
+    echoHelp += " are both enabled, either a new-line ('\\n') or carriage-return ('\\r') on input results in both '\\n' and '\\r' echoed to the terminal insted of a '";
     echoHelp += EchoOnInput;
     echoHelp += "'.";
+
+    std::string noEolTxHelp("By default, askpass translates '\\r' to '\\n' on output.  This option disables that translation.  Note: this option has no effect unless ");
+    noEolTxHelp += OptMultiLine;
+    noEolTxHelp += " mode is enabled.";
 
     po::options_description desc("Option Summary");
     desc.add_options()
     (OptHelp.c_str(), "generate help message")
-    (OptMultiLine.c_str(), "only terminate reading from input upon reading EOF, otherwise  also terminates input")
-    (OptEcho.c_str(), echoHelp.c_str() );
-    
+    (OptEcho.c_str(), echoHelp.c_str() )
+    (OptMultiLine.c_str(), "only terminate reading from input upon reading end-of-transmission (EOT), otherwise either ('\\n') or ('\\r') also terminates input")
+    (OptNoEolTx.c_str(), noEolTxHelp.c_str());
+
     po::variables_map vm;
     try
     {
@@ -134,12 +141,16 @@ int main(int argc, const char* argv[])
     
     if(vm.count(OptHelp))
     {
-        std::cout<<argv[0]<<" [--help] [--echo] [--multi-line]\n"<<desc;
-        return 0;
+        std::cout<<argv[0]<<" [--"<<OptHelp<<"] [--"<<OptEcho<<"] [--"<<OptMultiLine<<"] [--"<<OptNoEolTx<<"]\n"<<desc
+                <<"\nThe 'Enter' or 'Return' key normally generates a '\\r'.  You can also generate a '\\r' using ^M."
+                <<"\nYou can generate a '\\n' using ^J"
+                <<"\nYou can generate an EOT using ^D.\n";
+                return 0;
     }
     
-    bool multiLine = vm.count(OptMultiLine) != 0;
     bool echo = vm.count(OptEcho) != 0;
+    bool multiLine = vm.count(OptMultiLine) != 0;
+    bool eolTx = vm.count(OptNoEolTx) == 0;
 
     if(!isatty(fileno(stdin)))
     {
@@ -150,7 +161,7 @@ int main(int argc, const char* argv[])
 
     try
     {
-        return processInput(multiLine, echo);
+        return processInput(multiLine, echo, eolTx);
     }
     catch(const std::exception& ex)
     {
@@ -159,7 +170,7 @@ int main(int argc, const char* argv[])
     }
 }
 
-int processInput(bool multiLine, bool echo)
+int processInput(bool multiLine, bool echo, bool eolTx)
 {
     const char CharEot = 4;
     const char CharDel = 127;
@@ -204,16 +215,18 @@ int processInput(bool multiLine, bool echo)
         }
         else
         {
+            if(c == '\r' && eolTx)
+                c = '\n';
             ss.put(c);
             ++endpos;
             if(echo)
             {
-                char ec;
-                if(c == '\n' || c == '\r')
-                    ec = '\n';
+                char echoChar;
+                if(c == '\r' || c == '\n')
+                    echoChar = '\n';
                 else
-                    ec = EchoOnInput;
-                    echochar(ec);
+                    echoChar = EchoOnInput;
+                echochar(echoChar);
             }
         }
     }
